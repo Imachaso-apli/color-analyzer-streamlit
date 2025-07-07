@@ -87,25 +87,29 @@ if uploaded_file:
 
     st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), caption="Uploaded Image", use_container_width=True)
 
-    color_info = extract_dominant_colors(image, k=clusters)
-    color_info.sort(key=lambda x: -x[1])
-    simplified = simplify_colors(color_info, threshold)
-    simplified.sort(key=lambda x: -x[1])
+    try:
+        color_info = extract_dominant_colors(image, k=clusters)
+        color_info.sort(key=lambda x: -x[1])
+        simplified = simplify_colors(color_info, threshold)
+        simplified.sort(key=lambda x: -x[1])
 
-    st.subheader("\U0001F58C Dominant Colors")
-    for color, ratio in simplified:
-        hex_code = rgb_to_hex(color)
-        st.markdown(f"- `{hex_code}` — **{ratio*100:.2f}%**")
+        st.subheader("\U0001F58C Dominant Colors")
+        for color, ratio in simplified:
+            hex_code = rgb_to_hex(color)
+            st.markdown(f"- `{hex_code}` — **{ratio*100:.2f}%**")
 
-    fig = plot_color_pie_chart(simplified)
-    st.pyplot(fig)
+        fig = plot_color_pie_chart(simplified)
+        st.pyplot(fig, clear_figure=True)
 
-    if len(simplified) >= 2:
-        base_colors = [simplified[0][0], simplified[1][0]]
-        accents, tones = suggest_accent_colors(base_colors)
+        if len(simplified) >= 2:
+            base_colors = [simplified[0][0], simplified[1][0]]
+            accents, tones = suggest_accent_colors(base_colors)
 
-        st.subheader("\U0001F3A8 Suggested Accent Colors")
-        st.markdown("**Contrast Accents (Complementary):**")
-        st.markdown(", ".join([f"`{c}`" for c in accents]))
-        st.markdown("**Tone-on-Tone Variants:**")
-        st.markdown(", ".join([f"`{c}`" for c in tones]))
+            st.subheader("\U0001F3A8 Suggested Accent Colors")
+            st.markdown("**Contrast Accents (Complementary):**")
+            st.markdown(", ".join([f"`{c}`" for c in accents]))
+            st.markdown("**Tone-on-Tone Variants:**")
+            st.markdown(", ".join([f"`{c}`" for c in tones]))
+
+    except Exception as e:
+        st.error(f"解析中にエラーが発生しました: {e}")
