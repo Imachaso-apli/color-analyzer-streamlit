@@ -4,11 +4,9 @@ import cv2
 from sklearn.cluster import KMeans
 from colorsys import rgb_to_hls, hls_to_rgb
 import matplotlib.pyplot as plt
-from io import BytesIO
-import base64
 
 st.set_page_config(page_title="Color Analyzer 60-30-10", layout="centered")
-st.title("\U0001F3A8 Image Color Analyzer for 60-30-10 Rule")
+st.title("🎨 Image Color Analyzer for 60-30-10 Rule")
 
 # --- Helper Functions ---
 def rgb_to_hex(color):
@@ -76,6 +74,17 @@ def suggest_accent_colors(base_colors):
 
     return accent_colors, tone_colors
 
+def show_palette(colors, label):
+    st.markdown(f"**{label}:**")
+    cols = st.columns(len(colors))
+    for i, color in enumerate(colors):
+        with cols[i]:
+            st.markdown(
+                f"<div style='background-color: {color}; height: 60px; border-radius: 6px'></div>",
+                unsafe_allow_html=True,
+            )
+            st.markdown(f"<center>`{color}`</center>", unsafe_allow_html=True)
+
 # --- Main Interface ---
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 clusters = st.slider("Number of color clusters", 3, 10, 5)
@@ -89,29 +98,30 @@ if uploaded_file:
 
     try:
         st.info("🟡 解析を開始しました。")
+
         with st.spinner("🔍 画像を解析しています..."):
             color_info = extract_dominant_colors(image, k=clusters)
             color_info.sort(key=lambda x: -x[1])
             simplified = simplify_colors(color_info, threshold)
             simplified.sort(key=lambda x: -x[1])
 
-            st.subheader("\U0001F58C Dominant Colors")
-            for color, ratio in simplified:
-                hex_code = rgb_to_hex(color)
-                st.markdown(f"- `{hex_code}` — **{ratio*100:.2f}%**")
+        st.success("✅ 解析が完了しました。")
 
-            fig = plot_color_pie_chart(simplified)
-            st.pyplot(fig, clear_figure=True)
+        st.subheader("🖌 Dominant Colors")
+        for color, ratio in simplified:
+            hex_code = rgb_to_hex(color)
+            st.markdown(f"- `{hex_code}` — **{ratio*100:.2f}%**")
 
-            if len(simplified) >= 2:
-                base_colors = [simplified[0][0], simplified[1][0]]
-                accents, tones = suggest_accent_colors(base_colors)
+        fig = plot_color_pie_chart(simplified)
+        st.pyplot(fig, clear_figure=True)
 
-                st.subheader("\U0001F3A8 Suggested Accent Colors")
-                st.markdown("**Contrast Accents (Complementary):**")
-                st.markdown(", ".join([f"`{c}`" for c in accents]))
-                st.markdown("**Tone-on-Tone Variants:**")
-                st.markdown(", ".join([f"`{c}`" for c in tones]))
+        if len(simplified) >= 2:
+            base_colors = [simplified[0][0], simplified[1][0]]
+            accents, tones = suggest_accent_colors(base_colors)
+
+            st.subheader("🎨 Suggested Accent Colors")
+            show_palette(accents, "Contrast Accents (Complementary)")
+            show_palette(tones, "Tone-on-Tone Variants")
 
     except Exception as e:
         st.error(f"解析中にエラーが発生しました: {e}")
